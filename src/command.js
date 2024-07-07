@@ -12,8 +12,10 @@ yargs(hideBin(process.argv))
         description: "The content of the note to create",
       });
     },
-    (argv) => {
-      console.log("Hello: ", argv.note);
+    async (argv) => {
+      const tags = argv.tags ? argv.tags.split(",") : [];
+      const note = await newNote(argv.note, tags);
+      console.log("Note added!", note.id);
     },
   )
   .options("tags", {
@@ -25,7 +27,10 @@ yargs(hideBin(process.argv))
     "all",
     "Get all notes",
     () => { },
-    async (argv) => { },
+    async () => {
+      const notes = await getAllNotes();
+      listNotes(notes);
+    },
   )
   .command(
     "find <filter>",
@@ -37,7 +42,10 @@ yargs(hideBin(process.argv))
         type: "string",
       });
     },
-    async (argv) => { },
+    async (argv) => {
+      const notes = await findNotes(argv.filter);
+      listNotes(notes);
+    },
   )
   .command(
     "remove <id>",
@@ -48,7 +56,14 @@ yargs(hideBin(process.argv))
         description: "The id of the note you want to remove",
       });
     },
-    async (argv) => { },
+    async (argv) => {
+      const id = await removeNote(argv.id);
+      if (id) {
+        console.log("Note removed: ", id);
+      } else {
+        console.log("Note not found");
+      }
+    },
   )
   .command(
     "web [port]",
@@ -66,7 +81,10 @@ yargs(hideBin(process.argv))
     "clean",
     "remove all notes",
     () => { },
-    async (argv) => { },
+    async () => {
+      await removeAllNotes();
+      console.log("All notes removed");
+    },
   )
   .demandCommand(1)
   .parse();
